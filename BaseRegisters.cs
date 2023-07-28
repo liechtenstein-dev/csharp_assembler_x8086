@@ -5,6 +5,7 @@ public struct BaseRegisters
     public Dictionary<string, ushort> Registers;
     public Dictionary<ushort, ushort> Memory;
     public Dictionary<string, ushort> Labels;
+    public Boolean JumpAvailable;
     public ushort[] Stack;
 
     public BaseRegisters(Dictionary<string, ushort> registers, Dictionary<ushort, ushort> memory, Dictionary<string, ushort> labels, ushort[] stack)
@@ -46,9 +47,9 @@ public struct BaseRegisters
         };
         Memory = new Dictionary<ushort, ushort>();
         Labels = new Dictionary<string, ushort>();
-        Stack = new ushort[50];
+        JumpAvailable = false;
+        Stack = new ushort[65535];
     }
-    // return top of stack
     
     public ushort TransformLh(string reg)
     {

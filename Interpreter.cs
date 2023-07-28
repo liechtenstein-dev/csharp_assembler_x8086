@@ -1,84 +1,79 @@
 ﻿using System.Text.RegularExpressions;
 using assembler.Assembly;
 
-// Disable ReSharper InconsistencyNaming 
-namespace assembler
+// Disable ReSharper InconsistencyNaming
+public class Interpreter : IDisposable
 {
-    internal class Interpreter : IDisposable
+    public BaseRegisters baseRegisters = new BaseRegisters();
+
+    public ushort[] GetRegisters()
     {
-        public BaseRegisters baseRegisters = new BaseRegisters();
+        return baseRegisters.Registers.Values.ToArray();
+    }
 
-        public ushort[] GetRegisters()
+    public ushort GetRegister(string reg)
+    {
+        return baseRegisters.Registers[reg];
+    }
+
+    public void Run(string program)
+    {
+        var lineIndex = 0;
+        var lines = program.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+        lines = lines.Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
+        var labels = baseRegisters.Labels;
+        var registers = baseRegisters.Registers;
+        baseRegisters.Registers["IP"] = 0;
+        for (var i = 0; i < lines.Length; i++)
         {
-            return baseRegisters.Registers.Values.ToArray();
+            var line = lines[i].Trim();
+            if (!line.EndsWith(":")) continue;
+            labels[line.Substring(0, line.Length - 1)] = (ushort)i;
         }
 
-        public ushort GetRegister(string reg)
+        while (lineIndex < lines.Length)
         {
-            return baseRegisters.Registers[reg];
-        }
-
-        public void Run(string program)
-        {
-            var lineIndex = 0;
-            var lines = program.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
-            lines = lines.Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
-            var labels = baseRegisters.Labels;
-            var registers = baseRegisters.Registers;
+            var line = lines[lineIndex].Trim();
             
-            for (var i = 0; i < lines.Length; i++)
+            if (!string.IsNullOrEmpty(line) && !line.EndsWith(":") && !labels.ContainsKey(line) && !baseRegisters.JumpAvailable)
             {
-                var line = lines[i].Trim();
-                if (!line.EndsWith(":")) continue;
-                labels[line.Substring(0, line.Length - 1)] = (ushort)i;
-                i++;
-                for (var j = i; j < lines.Length; j++)
-                {
-                    var subLine = lines[j].Trim();
-                    i = j;
-                    labels[subLine[..subLine.Length]] = (ushort)i;
-                    if (subLine.Equals("RET") || subLine.StartsWith("J") || subLine.Equals("LOOP"))
-                    {
-                        break;
-                    }
-                }
+                Execute(line);
             }
-
-            while (lineIndex < lines.Length)
+            
+            if (!string.IsNullOrEmpty(line) && !line.EndsWith(":") && baseRegisters.JumpAvailable)
             {
-                var line = lines[lineIndex].Trim();
-
-                if (!string.IsNullOrEmpty(line) && !line.EndsWith(":") && !labels.ContainsKey(line))
-                {
-                    
-                    var parts = line.Split(' ');
-                    var inst = parts[0];
-                    var operand1 = parts.Length > 1 ? parts[1] : "";
-                    var operand2 = parts.Length > 2 ? parts[2] : "";
-                    operand1 = Regex.Replace(operand1, @",.*|;.*", "");
-                    operand2 = Regex.Replace(operand2, @",.*|;.*", "").ToUpper();
-                    
-                    var instructionRequirementToParams = new InstructionRequirement(inst, 
-                    operand1, operand2, baseRegisters);
-                    var instructionSet = new Instruction(instructionRequirementToParams);
-                    instructionRequirementToParams = instructionSet.GetValuesCompleted();
-                    baseRegisters = instructionRequirementToParams.BaseRegs;
-                    
-                }
-                registers["IP"]++;
-                lineIndex = registers["IP"];
+                Execute(line);
             }
+            
+            baseRegisters.Registers["IP"]++;
+            lineIndex = baseRegisters.Registers["IP"];
         }
+    }
 
-        public void Dispose()
-        {
-            GC.SuppressFinalize(this);
-            GC.Collect();
-        }
+    public void Execute(string line)
+    {
+        var parts = line.Split(' ');
+        var inst = parts[0];
+        var operand1 = parts.Length > 1 ? parts[1] : "";
+        var operand2 = parts.Length > 2 ? parts[2] : "";
+        operand1 = Regex.Replace(operand1, @",.*|;.*", "");
+        operand2 = Regex.Replace(operand2, @",.*|;.*", "").ToUpper();
 
-        ~Interpreter()
-        {
-            Dispose();
-        }
+        var instructionRequirementToParams = new InstructionRequirement(inst,
+            operand1, operand2, baseRegisters);
+        var instructionSet = new Instruction(instructionRequirementToParams);
+        instructionRequirementToParams = instructionSet.GetValuesCompleted();
+        baseRegisters = instructionRequirementToParams.BaseRegs;
+    }
+    
+    public void Dispose()
+    {
+        GC.SuppressFinalize(this);
+        GC.Collect();
+    }
+
+    ~Interpreter()
+    {
+        Dispose();
     }
 }

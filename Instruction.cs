@@ -191,16 +191,14 @@ public class Instruction
             no_param_instruction[name]();
             return;
         }
-        else
-        {
-            throw new InvalidOperationException("Invalid instruction: " + name);
-        }
+        throw new InvalidOperationException("Invalid instruction: " + name);
     }
     private void OneOperandInstruction(ushort operand, string str_operand)
     {
         var stack = innerInstruction.BaseRegs.Stack;
         var registers = innerInstruction.BaseRegs.Registers;
         var name = innerInstruction.NameOfInstruction;
+        var jumpable = innerInstruction.BaseRegs.JumpAvailable;
         Dictionary<string, Action<string>> instruction = new()
         {
                 /*
@@ -220,7 +218,8 @@ public class Instruction
                 {
                     stack[registers["SP"]] = registers["IP"];
                     registers["SP"] = (ushort)(registers["SP"] - 2);
-                    registers["IP"] = operand;
+                    registers["IP"] = ParseOperand(str_operand);
+                    jumpable = true;
                 }
             },
             {
@@ -229,7 +228,8 @@ public class Instruction
                     if (registers["ZF"] == 1)
                     {
                         registers["SP"] = (ushort)(registers["SP"] - 2);
-                        registers["IP"] = operand;
+                        registers["IP"] = ParseOperand(str_operand);
+                        jumpable = true;
                     }
                 }
             },
@@ -240,7 +240,8 @@ public class Instruction
                     {
                         stack[registers["SP"]] = registers["IP"];
                         registers["SP"] = (ushort)(registers["SP"] - 2);
-                        registers["IP"] = operand;
+                        registers["IP"] = ParseOperand(str_operand);
+                        jumpable = true;
                     }
                 }
             },
@@ -251,7 +252,8 @@ public class Instruction
                     {
                         stack[registers["SP"]] = registers["IP"];
                         registers["SP"] = (ushort)(registers["SP"] - 2);
-                        registers["IP"] = operand;
+                        registers["IP"] = ParseOperand(str_operand);
+                        jumpable = true;
                     }
                 }
             },
@@ -262,7 +264,8 @@ public class Instruction
                     {
                         stack[registers["SP"]] = registers["IP"];
                         registers["SP"] = (ushort)(registers["SP"] - 2);
-                        registers["IP"] = operand;
+                        registers["IP"] = ParseOperand(str_operand);
+                        jumpable = true;
                     }
                 }
             },
@@ -273,7 +276,8 @@ public class Instruction
                     {
                         stack[registers["SP"]] = registers["IP"];
                         registers["SP"] = (ushort)(registers["SP"] - 2);
-                        registers["IP"] = operand;
+                        registers["IP"] = ParseOperand(str_operand);
+                        jumpable = true;
                     }
                 }
             },
@@ -284,7 +288,8 @@ public class Instruction
                     {
                         stack[registers["SP"]] = registers["IP"];
                         registers["SP"] = (ushort)(registers["SP"] - 2);
-                        registers["IP"] = operand;
+                        registers["IP"] = ParseOperand(str_operand);
+                        jumpable = true;
                     }
                 }
             },
@@ -295,7 +300,8 @@ public class Instruction
                     {
                         stack[registers["SP"]] = registers["IP"];
                         registers["SP"] = (ushort)(registers["SP"] - 2);
-                        registers["IP"] = operand;
+                        registers["IP"] = ParseOperand(str_operand);
+                        jumpable = true;
                     }
                 }
             },
@@ -306,7 +312,8 @@ public class Instruction
                     {
                         stack[registers["SP"]] = registers["IP"];
                         registers["SP"] = (ushort)(registers["SP"] - 2);
-                        registers["IP"] = operand;
+                        registers["IP"] = ParseOperand(str_operand);
+                        jumpable = true;
                     }
                 }
             },
@@ -355,7 +362,10 @@ public class Instruction
                     registers["SP"] = (ushort)(registers["SP"] - 2);
                     registers["IP"] = operand;
                 }
-            }
+            },
+            {
+                "MUL", (str_operand) => registers["AX"] = (ushort)(registers[str_operand] * registers["AX"])
+            },
         };
         
         if (instruction.ContainsKey(name))
@@ -363,14 +373,16 @@ public class Instruction
             instruction[name](str_operand);
         }
         else
-        {
-            throw new InvalidOperationException("Invalid instruction: " + name);
+        { 
+            throw new InvalidOperationException($"Invalid One Operand Instruction:{innerInstruction
+                .NameOfInstruction}{Environment.NewLine}{innerInstruction.StrOperand}");
         }
     }
     private void NoOperandInstruction()
     {
         var registers = innerInstruction.BaseRegs.Registers;
         var stack = innerInstruction.BaseRegs.Stack;
+        var jumpable = innerInstruction.BaseRegs.JumpAvailable;
         Dictionary<string, Action> instruction = new Dictionary<string, Action>()
         {
             {
@@ -378,6 +390,7 @@ public class Instruction
                 {
                     registers["SP"] = (ushort)(registers["SP"] + 2);
                     registers["IP"] = stack[registers["SP"]];
+                    jumpable = false;
                 }
             },
             {
@@ -395,7 +408,8 @@ public class Instruction
         }
         else
         { 
-            throw new InvalidOperationException("Invalid instruction: " + innerInstruction.NameOfInstruction);
+            throw new InvalidOperationException($"Invalid No Operand Instruction:{innerInstruction
+            .NameOfInstruction}{Environment.NewLine}{innerInstruction.StrOperand}");
         }
     }
     public InstructionRequirement GetValuesCompleted()
