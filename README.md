@@ -4,7 +4,7 @@ Esta clase permite ejecutar un string de codigo Assembly x86 atraves del metodo 
 
 ## Limitaciones
 * No existen los segmentos de codigo, datos, extra, pila.
-* No se puede usar las interrupciones y solo funciona la int 21.
+* No se puede usar las interrupciones
 
 <br>
 <h2>Estructura del Codigo Assembler</h2>
