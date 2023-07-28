@@ -17,3 +17,4 @@ Esta clase permite ejecutar un string de codigo Assembly x86 atraves del metodo 
 
 [Interpreter.cs](./Interpreter.md)
 
+[Functions.cs](./Functions.md)
