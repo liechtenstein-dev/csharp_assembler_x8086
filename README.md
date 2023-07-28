@@ -9,7 +9,7 @@ Esta clase permite ejecutar un string de codigo Assembly x86 atraves del metodo 
 <br>
 <h2>Estructura del Codigo Assembler</h2>
 
-[Instruction.cs](./instruction.md)
+[Instruction.cs](./Instruction.md)
 
 [InstructionTypes.cs](./InstructionTypes.md)
 
