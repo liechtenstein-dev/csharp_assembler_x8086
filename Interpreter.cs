@@ -50,7 +50,7 @@ public class Interpreter : IDisposable
         }
     }
 
-    public void Execute(string line)
+    private void Execute(string line)
     {
         var parts = line.Split(' ');
         var inst = parts[0];
